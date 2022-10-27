@@ -29,7 +29,7 @@ export default class Tiles extends THREE.Object3D {
       const material = new THREE.MeshBasicMaterial({
         map: assetManager.textures[i],
       });
-      const geometry = new THREE.PlaneGeometry(1, 1);
+      const geometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
       geometry.rotateX(-Math.PI / 2);
       const mesh = new THREE.Mesh(geometry, material);
       meshes.push(mesh);
