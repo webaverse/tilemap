@@ -41,7 +41,7 @@ export default class Tiles extends THREE.Object3D {
         const cloneMesh = meshes[idx].clone();
         cloneMesh.position.set(
           (x - TILE_AMOUNT / 2) * TILE_SIZE,
-          0.05,
+          0.1,
           (z - TILE_AMOUNT / 2) * TILE_SIZE,
         );
         this.add(cloneMesh);
