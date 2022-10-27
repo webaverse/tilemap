@@ -37,7 +37,7 @@ export default class Tiles extends THREE.Object3D {
 
     for (let z = 0; z < TILE_AMOUNT; z++) {
       for (let x = 0; x < TILE_AMOUNT; x++) {
-        const idx = randomIntFromInterval(0, meshes.length - TILE_SIZE);
+        const idx = randomIntFromInterval(0, meshes.length - 1);
         const cloneMesh = meshes[idx].clone();
         cloneMesh.position.set(
           (x - TILE_AMOUNT / 2) * TILE_SIZE,
