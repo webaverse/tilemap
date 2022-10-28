@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import AssetManager from './asset-manager';
+import AssetManager from './asset-manager.js';
 
 // this file's base url
 const BASE_URL = import.meta.url.replace(/(\/)[^\/\\]*$/, '$1');

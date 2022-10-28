@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import metaversefile from 'metaversefile';
-import Tiles from './tiles';
+import Tiles from './tiles.js';
 
 const {
   useApp,
