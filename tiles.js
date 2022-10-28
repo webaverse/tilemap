@@ -28,6 +28,7 @@ export default class Tiles extends THREE.Object3D {
     for (let i = 0; i < assetManager.textures.length; i++) {
       const material = new THREE.MeshBasicMaterial({
         map: assetManager.textures[i],
+        side: THREE.DoubleSide,
       });
       const geometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
       geometry.rotateX(-Math.PI / 2);
@@ -41,7 +42,7 @@ export default class Tiles extends THREE.Object3D {
         const cloneMesh = meshes[idx].clone();
         cloneMesh.position.set(
           (x - TILE_AMOUNT / 2) * TILE_SIZE,
-          0.1,
+          0,
           (z - TILE_AMOUNT / 2) * TILE_SIZE,
         );
         this.add(cloneMesh);
