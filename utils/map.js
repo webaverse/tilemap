@@ -1,4 +1,5 @@
-import Generate from "./noiseGenerator";
+import {TILE_AMOUNT, TILE_SIZE} from '../tiles';
+import Generate, {GenerateCubic} from './noiseGenerator';
 
 export default class map {
   biomes;
@@ -19,6 +20,8 @@ export default class map {
 
   propCounts = {};
 
+  meshes = [];
+
   constructor(
     biomes,
     width,
@@ -27,7 +30,8 @@ export default class map {
     offset,
     heightWaves,
     moistureWaves,
-    heatWaves
+    heatWaves,
+    meshes,
   ) {
     this.biomes = biomes;
     this.width = width;
@@ -38,35 +42,48 @@ export default class map {
     this.moistureWaves = moistureWaves;
     this.heatWaves = heatWaves;
 
+    console.log('generating maps');
     this.heightMap = Generate(
       this.width,
       this.height,
       this.scale,
       this.heightWaves,
-      this.offset
+      this.offset,
     );
+    console.log('map 2 done');
     this.moistureMap = Generate(
       this.width,
       this.height,
       this.scale,
       this.moistureWaves,
-      this.offset
+      this.offset,
     );
+    console.log('map 3 done');
     this.heatMap = Generate(
       this.width,
       this.height,
       this.scale,
       this.heatWaves,
-      this.offset
+      this.offset,
     );
+    console.log('map 4 done');
 
-    for (let x = 0; x < width; ++x) {
-      for (let y = 0; y < height; ++y) {
-        biome = getBiome(
-          this.heightMap[(x, y)],
-          this.moistureMap[(x, y)],
-          this.heatMap[(x, y)]
+    for (let z = 0; z < TILE_AMOUNT; z++) {
+      for (let x = 0; x < TILE_AMOUNT; x++) {
+        const biome = this.getBiome(
+          this.heightMap[z][x],
+          this.moistureMap[z][x],
+          this.heatMap[z][x],
         );
+
+        const tile = biome.getRandomTile();
+        const cloneMesh = meshes[tile].clone();
+        cloneMesh.position.set(
+          (x - TILE_AMOUNT / 2) * TILE_SIZE,
+          0.1,
+          (z - TILE_AMOUNT / 2) * TILE_SIZE,
+        );
+        this.meshes.push(cloneMesh);
 
         const addProp =
           !this.propCounts[biome.name] ||
@@ -80,15 +97,31 @@ export default class map {
         }
       }
     }
+
+    console.log('loaded ' + this.meshes.length + ' meshes');
   }
 
   getBiome(height, moisture, heat) {
-    res = null;
-    biomeTemp = [];
+    let res = null;
+    let biomeTemp = [];
 
     for (let i = 0; i < this.biomes.length; i++) {
-      if (biones[i].matchCondition(height, moisture, heat)) {
-        biomeTemp.push(new biomeTempData(biomes[i]));
+      console.log(
+        'checking biome:',
+        this.biomes[i].name,
+        'match:',
+        this.biomes[i].matchCondition(height, moisture, heat),
+        'input:',
+        {height, moisture, heat},
+        "biome's:",
+        {
+          height: this.biomes[i].minHeight,
+          moisture: this.biomes[i].minMoisture,
+          heat: this.biomes[i].minHeat,
+        },
+      );
+      if (this.biomes[i].matchCondition(height, moisture, heat)) {
+        biomeTemp.push(new biomeTempData(this.biomes[i]));
       }
     }
 
@@ -107,6 +140,7 @@ export default class map {
     }
 
     if (res == null) {
+      console.log('biome is null, returning first:', this.biomes[0].name);
       return this.biomes[0];
     }
 
@@ -124,9 +158,9 @@ class biomeTempData {
   getDiffValue(height, moisture, heat) {
     return (
       height -
-      biome.minHeight +
-      (moisture - biome.minMoisture) +
-      (heat - biome.minHeat)
+      this.biome.minHeight +
+      (moisture - this.biome.minMoisture) +
+      (heat - this.biome.minHeat)
     );
   }
 }

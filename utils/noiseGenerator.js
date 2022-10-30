@@ -1,27 +1,32 @@
-import { cubicNoiseConfig, cubicNoiseSample2 } from "./cubicNoise";
-import Perlin from "./perlinNoise";
+import {cubicNoiseConfig, cubicNoiseSample2} from './cubicNoise';
+import Perlin from './perlinNoise';
 
 export default function Generate(width, height, scale, waves, offset) {
-  const noiseMap = [,];
+  const noiseMap = [];
   const noise = new Perlin();
 
   for (let x = 0; x < width; ++x) {
+    noiseMap.push([]);
     for (let y = 0; y < height; ++y) {
       const samplePosX = x * scale + offset[0];
       const samplePosY = y * scale + offset[1];
 
       let normalization = 0;
 
-      for (let i = 0; i < waves; ++i) {
-        const perlinRes = noise.noise(
+      for (let i = 0; i < waves.length; ++i) {
+        let perlinRes = noise.noise(
           samplePosX * waves[i].frequency + waves[i].seed,
-          samplePosY * waves[i].frequency + waves[i].seed
+          samplePosY * waves[i].frequency + waves[i].seed,
         );
-        noiseMap[(x, y)] = waves[i].amplitude * perlinRes;
+        if (perlinRes < 0) {
+          perlinRes = 0;
+        }
+
+        noiseMap[x].push(waves[i].amplitude * perlinRes);
         normalization += waves[i].amplitude;
       }
 
-      noiseMap[(x, y)] /= normalization;
+      noiseMap[x][y] /= normalization;
     }
   }
 
@@ -29,26 +34,27 @@ export default function Generate(width, height, scale, waves, offset) {
 }
 
 export function GenerateCubic(seed, width, height, scale, waves, offset) {
-  const noiseMap = [,];
+  const noiseMap = [];
 
   for (let x = 0; x < width; ++x) {
+    noiseMap.push([]);
     for (let y = 0; y < height; ++y) {
       const samplePosX = x * scale + offset[0];
       const samplePosY = y * scale + offset[1];
 
       let normalization = 0;
 
-      for (let i = 0; i < waves; ++i) {
+      for (let i = 0; i < waves.length; ++i) {
         const noise = cubicNoiseSample2(
-          cubicNoiseConfig(seed, 0, 0),
+          cubicNoiseConfig(seed, 0.1, 0.1),
           samplePosX * waves[i].frequency + waves[i].seed,
-          samplePosY * waves[i].frequency + waves[i].seed
+          samplePosY * waves[i].frequency + waves[i].seed,
         );
-        noiseMap[(x, y)] = waves[i].amplitude * noise;
+        noiseMap[x].push(waves[i].amplitude * noise);
         normalization += waves[i].amplitude;
       }
 
-      noiseMap[(x, y)] /= normalization;
+      noiseMap[x][y] /= normalization;
     }
   }
 
