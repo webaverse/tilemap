@@ -63,8 +63,8 @@ export default function forest2(_meshes) {
   }
 
   function init(i) {
-    for (let x = i; x < TILE_AMOUNT + i; x++) {
-      for (let y = i; y < TILE_AMOUNT + i; y++) {
+    for (let x = i; x < TILE_AMOUNT + i; x += 0.5) {
+      for (let y = i; y < TILE_AMOUNT + i; y += 0.5) {
         const n1 = Math.round(
           pn.noise(x / scales[0], y / scales[0], 0) * range,
         );
@@ -84,7 +84,7 @@ export default function forest2(_meshes) {
           tileName =
             deepForestTiles[Math.floor(Math.random() * deepForestTiles.length)];
           const rnd = Math.random();
-          if (rnd < 0.5) {
+          if (rnd < 0.25) {
             const tree =
               treeTiles[Math.floor(Math.random() * treeTiles.length)];
 
@@ -100,7 +100,7 @@ export default function forest2(_meshes) {
           tileName = stoneTiles[Math.floor(Math.random() * stoneTiles.length)];
 
           const rnd = Math.random();
-          if (rnd < 0.2) {
+          if (rnd < 0.1) {
             const rock =
               rockTiles[Math.floor(Math.random() * rockTiles.length)];
 
@@ -117,7 +117,7 @@ export default function forest2(_meshes) {
             forestTiles[Math.floor(Math.random() * forestTiles.length)];
 
           const rnd = Math.random();
-          if (rnd < 0.1) {
+          if (rnd < 0.05) {
             const tree =
               bushTiles[Math.floor(Math.random() * bushTiles.length)];
 
@@ -128,7 +128,7 @@ export default function forest2(_meshes) {
               (x - TILE_AMOUNT / 2) * TILE_SIZE,
             );
             meshes.push(cloneTreeMesh);
-          } else if (rnd < 0.15) {
+          } else if (rnd < 0.075) {
             const rock =
               rockTiles[Math.floor(Math.random() * rockTiles.length)];
 
@@ -139,7 +139,7 @@ export default function forest2(_meshes) {
               (x - TILE_AMOUNT / 2) * TILE_SIZE,
             );
             meshes.push(cloneRockMesh);
-          } else if (rnd < 0.5) {
+          } else if (rnd < 0.25) {
             const tree =
               flowerTiles[Math.floor(Math.random() * flowerTiles.length)];
 
