@@ -2,7 +2,7 @@ import {TILE_AMOUNT, TILE_SIZE} from './tiles';
 import Perlin from './utils/perlinNoise';
 
 export default function forest2(_meshes) {
-  const snowTiles = ['sprite_146', 'sprite_147', 'sprite_148', 'sprite_149'];
+  const deepForestTiles = ['sprite_159', 'sprite_160', 'sprite_161'];
   const forestTiles = [
     'sprite_159',
     'sprite_160',
@@ -13,9 +13,32 @@ export default function forest2(_meshes) {
   ];
   const stoneTiles = ['sprite_138', 'sprite_139'];
   const grassTiles = ['sprite_156', 'sprite_157', 'sprite_158'];
-  const sandTiles = ['sprite_135', 'sprite_136', 'sprite_137'];
-  const waterTiles = ['sprite_150', 'sprite_151', 'sprite_152'];
-  const deepSeeTiles = ['sprite_153', 'sprite_154', 'sprite_155'];
+  const sandTiles = ['sprite_197', 'sprite_198'];
+  const waterTiles = [
+    'sprite_192',
+    'sprite_193',
+    'sprite_194',
+    'sprite_195',
+    'sprite_196',
+  ];
+  const treeTiles = ['sprite_169', 'sprite_171', 'sprite_172'];
+  const rockTiles = ['sprite_176', 'sprite_177', 'sprite_178'];
+  const flowerTiles = [
+    'sprite_179',
+    'sprite_180',
+    'sprite_181',
+    'sprite_182',
+    'sprite_183',
+    'sprite_184',
+    'sprite_185',
+    'sprite_186',
+    'sprite_187',
+    'sprite_188',
+    'sprite_189',
+    'sprite_190',
+    'sprite_191',
+  ];
+  const bushTiles = ['sprite_173', 'sprite_174', 'sprite_175'];
 
   const pn = new Perlin();
 
@@ -51,13 +74,83 @@ export default function forest2(_meshes) {
         const num = addLayers(n1, n2);
 
         let tileName = '';
+
+        /*
+        Replace the snow with dense forest and add trees
+        Add inside based on if it is dense forest or not have trees/bushes flowers etc
+        Add rocks
+        */
         if (num <= 20) {
-          tileName = snowTiles[Math.floor(Math.random() * snowTiles.length)];
+          tileName =
+            deepForestTiles[Math.floor(Math.random() * deepForestTiles.length)];
+          const rnd = Math.random();
+          if (rnd < 0.5) {
+            const tree =
+              treeTiles[Math.floor(Math.random() * treeTiles.length)];
+
+            const cloneTreeMesh = _meshes[tree].clone();
+            cloneTreeMesh.position.set(
+              (y - TILE_AMOUNT / 2) * TILE_SIZE,
+              0.05,
+              (x - TILE_AMOUNT / 2) * TILE_SIZE,
+            );
+            meshes.push(cloneTreeMesh);
+          }
         } else if (num <= 35) {
           tileName = stoneTiles[Math.floor(Math.random() * stoneTiles.length)];
+
+          const rnd = Math.random();
+          if (rnd < 0.2) {
+            const rock =
+              rockTiles[Math.floor(Math.random() * rockTiles.length)];
+
+            const cloneRockMesh = _meshes[rock].clone();
+            cloneRockMesh.position.set(
+              (y - TILE_AMOUNT / 2) * TILE_SIZE,
+              0.05,
+              (x - TILE_AMOUNT / 2) * TILE_SIZE,
+            );
+            meshes.push(cloneRockMesh);
+          }
         } else if (num <= 40) {
           tileName =
             forestTiles[Math.floor(Math.random() * forestTiles.length)];
+
+          const rnd = Math.random();
+          if (rnd < 0.1) {
+            const tree =
+              bushTiles[Math.floor(Math.random() * bushTiles.length)];
+
+            const cloneTreeMesh = _meshes[tree].clone();
+            cloneTreeMesh.position.set(
+              (y - TILE_AMOUNT / 2) * TILE_SIZE,
+              0.05,
+              (x - TILE_AMOUNT / 2) * TILE_SIZE,
+            );
+            meshes.push(cloneTreeMesh);
+          } else if (rnd < 0.15) {
+            const rock =
+              rockTiles[Math.floor(Math.random() * rockTiles.length)];
+
+            const cloneRockMesh = _meshes[rock].clone();
+            cloneRockMesh.position.set(
+              (y - TILE_AMOUNT / 2) * TILE_SIZE,
+              0.05,
+              (x - TILE_AMOUNT / 2) * TILE_SIZE,
+            );
+            meshes.push(cloneRockMesh);
+          } else if (rnd < 0.5) {
+            const tree =
+              flowerTiles[Math.floor(Math.random() * flowerTiles.length)];
+
+            const cloneTreeMesh = _meshes[tree].clone();
+            cloneTreeMesh.position.set(
+              (y - TILE_AMOUNT / 2) * TILE_SIZE,
+              0.05,
+              (x - TILE_AMOUNT / 2) * TILE_SIZE,
+            );
+            meshes.push(cloneTreeMesh);
+          }
         } else if (num <= 60) {
           tileName = grassTiles[Math.floor(Math.random() * grassTiles.length)];
         } else if (num <= 63) {
@@ -65,11 +158,8 @@ export default function forest2(_meshes) {
         } else if (num <= 80) {
           tileName = waterTiles[Math.floor(Math.random() * waterTiles.length)];
         } else {
-          tileName =
-            deepSeeTiles[Math.floor(Math.random() * deepSeeTiles.length)];
+          tileName = waterTiles[Math.floor(Math.random() * waterTiles.length)];
         }
-
-        console.log('num:', num, 'tilename:', tileName);
 
         if (!tileName) {
           console.log("couldn't get tile name");
@@ -77,13 +167,11 @@ export default function forest2(_meshes) {
           const cloneMesh = _meshes[tileName].clone();
           cloneMesh.position.set(
             (y - TILE_AMOUNT / 2) * TILE_SIZE,
-            0.1,
+            0,
             (x - TILE_AMOUNT / 2) * TILE_SIZE,
           );
           meshes.push(cloneMesh);
         }
-
-        console.log(num);
       }
     }
   }

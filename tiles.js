@@ -17,7 +17,7 @@ const TILES = [
 });
 
 export const TILE_SIZE = 1;
-export const TILE_AMOUNT = 200;
+export const TILE_AMOUNT = 50;
 
 export default class Tiles extends THREE.Object3D {
   constructor() {
@@ -26,18 +26,68 @@ export default class Tiles extends THREE.Object3D {
   }
 
   loadTiles(type, length) {
-    const res = [];
+    if (type === 'summer') {
+      const res = [
+        'cliff 0.png',
+        'cliff 1.png',
+        'cliff 2.png',
+        'cliff 3.png',
+        'cliffcorner 0.png',
+        'cliffcorner 1.png',
+        'cliffcorner 2.png',
+        'cliffcorner 3.png',
+        'cliffturn 0.png',
+        'cliffturn 1.png',
+        'cliffturn 2.png',
+        'cliffturn 3.png',
+        'grass 0.png',
+        'grasscorner 0.png',
+        'grasscorner 1.png',
+        'grasscorner 2.png',
+        'grasscorner 3.png',
+        'road 0.png',
+        'road 1.png',
+        'road 2.png',
+        'road 3.png',
+        'roadturn 0.png',
+        'roadturn 1.png',
+        'roadturn 2.png',
+        'roadturn 3.png',
+        'watercorner 0.png',
+        'watercorner 1.png',
+        'watercorner 2.png',
+        'watercorner 3.png',
+        'waterside 0.png',
+        'waterside 1.png',
+        'waterside 2.png',
+        'waterside 3.png',
+        'waterturn 0.png',
+        'waterturn 1.png',
+        'waterturn 2.png',
+        'waterturn 3.png',
+        'water_a 0.png',
+        'water_b 0.png',
+        'water_c 0.png',
+      ];
 
-    for (let i = 0; i < length; i++) {
-      res.push(
-        `${BASE_URL}assets/tiles/${type}/sprite_${
-          i >= 100 ? i : i >= 10 ? `0${i}` : `00${i}`
-        }.png`,
-      );
+      for (let i = 0; i < res.length; i++) {
+        res[i] = `${BASE_URL}assets/tiles/${type}/${res[i]}`;
+      }
+      return res;
+    } else {
+      const res = [];
+
+      for (let i = 0; i < length; i++) {
+        res.push(
+          `${BASE_URL}assets/tiles/${type}/sprite_${
+            i >= 100 ? i : i >= 10 ? `0${i}` : `00${i}`
+          }.png`,
+        );
+      }
+
+      console.log('loaded ' + res.length + ' tiles');
+      return res;
     }
-
-    console.log('loaded ' + res.length + ' tiles');
-    return res;
   }
 
   generate(type, assetManager) {
@@ -45,9 +95,15 @@ export default class Tiles extends THREE.Object3D {
       console.log('Spawning all');
       const meshes = {};
       for (let i = 0; i < assetManager.textures.length; i++) {
-        const material = new THREE.MeshBasicMaterial({
-          map: assetManager.textures[i],
-        });
+        let material =
+          i > 168 && i < 192
+            ? new THREE.MeshBasicMaterial({
+                map: assetManager.textures[i],
+              })
+            : new THREE.MeshBasicMaterial({
+                map: assetManager.textures[i],
+              });
+
         const geometry = new THREE.PlaneGeometry(1, 1);
         geometry.rotateX(-Math.PI / 2);
         const mesh = new THREE.Mesh(geometry, material);
@@ -69,10 +125,12 @@ export default class Tiles extends THREE.Object3D {
       for (let i = 0; i < assetManager.textures.length; i++) {
         const material = new THREE.MeshBasicMaterial({
           map: assetManager.textures[i],
+          side: THREE.DoubleSide,
         });
         const geometry = new THREE.PlaneGeometry(1, 1);
         geometry.rotateX(-Math.PI / 2);
         const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(0, 0, 0);
         meshes.push(mesh);
       }
 
@@ -82,7 +140,7 @@ export default class Tiles extends THREE.Object3D {
           const cloneMesh = meshes[idx].clone();
           cloneMesh.position.set(
             (x - TILE_AMOUNT / 2) * TILE_SIZE,
-            0.1,
+            0,
             (z - TILE_AMOUNT / 2) * TILE_SIZE,
           );
           this.add(cloneMesh);
