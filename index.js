@@ -2,22 +2,10 @@ import * as THREE from 'three';
 import metaversefile from 'metaversefile';
 import Tiles from './tiles';
 
-const {
-  useApp,
-  useFrame,
-  useCleanup,
-  useCamera,
-  useLocalPlayer,
-  usePhysics,
-  useProcGenManager,
-  useGPUTask,
-  useGenerationTask,
-} = metaversefile;
+const {useApp, useFrame, useCleanup, usePhysics} = metaversefile;
 
 export default e => {
   const app = useApp();
-  const camera = useCamera();
-  const procGenManager = useProcGenManager();
   const physics = usePhysics();
 
   // locals
@@ -32,7 +20,7 @@ export default e => {
 
       // load
       const _waitForLoad = async () => {
-        await Promise.all([tiles.waitForLoad('forest', 199)]);
+        await Promise.all([tiles.waitForLoad('forest', 200)]);
       };
       await _waitForLoad();
 
