@@ -34,7 +34,7 @@ export default class Tiles extends THREE.Object3D {
       const meshes = {};
       for (let i = 0; i < assetManager.textures.length; i++) {
         let material =
-          i > 168 && i < 192
+          (i > 168 && i < 192) || i > 199
             ? new THREE.MeshBasicMaterial({
                 map: assetManager.textures[i],
                 blending: 1,
@@ -44,7 +44,7 @@ export default class Tiles extends THREE.Object3D {
                 map: assetManager.textures[i],
               });
 
-        const geometry = new THREE.PlaneGeometry(0.5, 0.5);
+        const geometry = new THREE.PlaneGeometry(1, 1);
         geometry.rotateX(-Math.PI / 2);
         const mesh = new THREE.Mesh(geometry, material);
         const meshName = assetManager.textures[i].source.data.src

@@ -20,7 +20,7 @@ export default e => {
 
       // load
       const _waitForLoad = async () => {
-        await Promise.all([tiles.waitForLoad('forest', 200)]);
+        await Promise.all([tiles.waitForLoad('forest', 225)]);
       };
       await _waitForLoad();
 
