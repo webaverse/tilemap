@@ -154,11 +154,6 @@ houseAreasFiltered = houseAreasFiltered.filter((area, index) => {
 
 console.log('filtered houses:', houseAreasFiltered.length);
 
-//remove some houses randomly
-houseAreasFiltered = houseAreasFiltered.filter((area, index) => {
-  return Math.random() < 0.5;
-});
-
 console.log('filtered houses:', houseAreasFiltered.length);
 
 const houseUpLeft = 'sprite_216';
@@ -180,6 +175,15 @@ const downRight = 'sprite_208';
 const upEnd = 'sprite_213';
 
 const resHouses = [];
+const grid = new PF.Grid(TILE_AMOUNT, TILE_AMOUNT);
+
+for (let x = 0; x < TILE_AMOUNT; x++) {
+  for (let y = 0; y < TILE_AMOUNT; y++) {
+    grid.setWalkableAt(y, x, mapArr[y][x] === 0);
+  }
+}
+
+const finder = new PF.AStarFinder();
 
 //place houses in the areas
 houseAreasFiltered.forEach(area => {
@@ -210,38 +214,35 @@ houseAreasFiltered.forEach(area => {
   ];
 
   for (let i = 0; i < locs.length; i++) {
-    mapArr[locs[i][0]][locs[i][1]] = i < 6 ? 0 : 1;
+    mapArr[locs[i][1]][locs[i][0]] = 1; // i < 6 ? 0 : 1;
+    grid.setWalkableAt(locs[i][1], locs[i][0], false); // i < 6 ? false : true);
 
     if (i === 7) {
-      resHouses.push([locs[i][0], locs[i][1]]);
+      resHouses.push([locs[i][1], locs[i][0]]);
     }
   }
 });
 
-const grid = new PF.Grid(TILE_AMOUNT, TILE_AMOUNT);
-for (let x = 0; x < TILE_AMOUNT; x++) {
-  for (let y = 0; y < TILE_AMOUNT; y++) {
-    grid.setWalkableAt(y, x, mapArr[y][x] === 0);
-  }
-}
-
-const finder = new PF.AStarFinder();
-console.log('resHouses', resHouses);
+console.log('houses:', resHouses.length);
+let le = 0;
 for (let i = 0; i < resHouses.length - 2; i += 2) {
   const start = resHouses[i];
   const end = resHouses[i + 1];
 
-  const path = finder.findPath(start[0], start[1], end[0], end[1], grid);
-  console.log(path);
-  if (path && path.length > 0) {
-    let has1s = false;
-
-    for (let i = 0; i < path.length; i++) {
-      if (mapArr[path[i][0]][path[i][1]] === 1) {
-        has1s = true;
-      }
-    }
-
-    console.log(has1s);
+  //get one tile down from the start and end
+  const startDown = [start[0], start[1] + 1];
+  const endDown = [end[0], end[1] + 1];
+  const path = finder.findPath(
+    startDown[0],
+    startDown[1],
+    endDown[0],
+    endDown[1],
+    grid,
+  );
+  console.log('path now:', path);
+  if (path.length > 0) {
+    le++;
   }
 }
+
+console.log(le);
