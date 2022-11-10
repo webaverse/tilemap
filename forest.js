@@ -5,12 +5,14 @@ import PF from 'pathfinding';
 
 export default function generateForest(_meshes) {
   const multipliers = {};
-  multipliers['trees'] = 1;
+  multipliers['trees'] = 0.75;
   multipliers['rocks'] = 1;
   multipliers['stones'] = 1;
   multipliers['flowers'] = 1;
   multipliers['bush_normal'] = 1;
   multipliers['bush_sand'] = 1;
+
+  const addRandomPath = false;
 
   const deepForestTiles = ['sprite_199'];
   const forestTiles = ['sprite_199'];
@@ -24,8 +26,13 @@ export default function generateForest(_meshes) {
     'sprite_195',
     'sprite_196',
   ];
-  const treeTiles = ['sprite_169', 'sprite_170', 'sprite_171', 'sprite_172'];
-  const rockTiles = ['sprite_176', 'sprite_177', 'sprite_178'];
+  const treeTiles = [
+    ['sprite_170', 'sprite_169'],
+    ['sprite_172', 'sprite_171'],
+    ['sprite_226', 'sprite_225'],
+    ['sprite_228', 'sprite_227'],
+  ];
+  const rockTiles = ['sprite_176', 'sprite_177', ['sprite_229', 'sprite_178']];
   const flowerTiles = [
     'sprite_179',
     'sprite_180',
@@ -78,7 +85,7 @@ export default function generateForest(_meshes) {
 
     props.push({type, x: y, y: x});
 
-    const prop =
+    let prop =
       type === 'tree'
         ? treeTiles[Math.floor(Math.random() * treeTiles.length)]
         : type === 'stone' || type === 'rock'
@@ -89,6 +96,12 @@ export default function generateForest(_meshes) {
         ? bushNormalTiles[Math.floor(Math.random() * bushNormalTiles.length)]
         : bushSandTiles[Math.floor(Math.random() * bushSandTiles.length)];
 
+    let prop2 = '';
+    if (typeof prop !== 'string') {
+      prop2 = prop[1];
+      prop = prop[0];
+    }
+
     const cloneTreeMesh = _meshes[prop].clone();
     cloneTreeMesh.position.set(
       (y - TILE_AMOUNT / 2) * TILE_SIZE,
@@ -97,6 +110,22 @@ export default function generateForest(_meshes) {
     );
     meshes.push(cloneTreeMesh);
     allMeshes.push({type: 'prop', x, y, mesh: cloneTreeMesh});
+
+    if (prop2) {
+      addSecondPart(x, y, prop2);
+    }
+  }
+
+  function addSecondPart(x, y, treeSprite) {
+    const cloneMesh = _meshes[treeSprite].clone();
+    x -= 1;
+
+    cloneMesh.position.set(
+      (y - TILE_AMOUNT / 2) * TILE_SIZE,
+      0.01,
+      (x - TILE_AMOUNT / 2) * TILE_SIZE,
+    );
+    meshes.push(cloneMesh);
   }
 
   function addLayers(n1, n2) {
@@ -213,6 +242,27 @@ export default function generateForest(_meshes) {
     const downRight = 'sprite_213';
     const upEnd = 'sprite_213';
     const pathMiddle = 'sprite_213';
+    const rightStraight = 'sprite_211';
+    const leftStraight = 'sprite_211';
+    const downEnd = 'sprite_213';
+    const miscPath = 'sprite_213';
+    const rightEnd = 'sprite_213';
+    const leftEnd = 'sprite_213';
+
+    /*  const upStraight = 'sprite_211';
+    const downStraight = 'sprite_211';
+    const upLeft = 'sprite_206';
+    const upRight = 'sprite_207';
+    const downLeft = 'sprite_208';
+    const downRight = 'sprite_213';
+    const upEnd = 'sprite_210';
+    const pathMiddle = 'sprite_213';
+    const rightStraight = 'sprite_211';
+    const leftStraight = 'sprite_211';
+    const downEnd = 'sprite_212';
+    const miscPath = 'sprite_213';
+    const rightEnd = 'sprite_214';
+    const leftEnd = 'sprite_215';*/
 
     let path = [];
     const grid = new PF.Grid(TILE_AMOUNT, TILE_AMOUNT);
@@ -224,102 +274,104 @@ export default function generateForest(_meshes) {
     }
     const finder = new PF.AStarFinder();
 
-    while (path.length <= 4) {
-      const randomPoint = () => {
-        let x = Math.floor(Math.random() * TILE_AMOUNT);
-        let y = Math.floor(Math.random() * TILE_AMOUNT);
+    if (addRandomPath) {
+      while (path.length <= 4) {
+        const randomPoint = () => {
+          let x = Math.floor(Math.random() * TILE_AMOUNT);
+          let y = Math.floor(Math.random() * TILE_AMOUNT);
 
-        while (mapArr[y][x] == 1) {
-          x = Math.floor(Math.random() * TILE_AMOUNT);
-          y = Math.floor(Math.random() * TILE_AMOUNT);
+          while (mapArr[y][x] == 1) {
+            x = Math.floor(Math.random() * TILE_AMOUNT);
+            y = Math.floor(Math.random() * TILE_AMOUNT);
+          }
+
+          return {x, y};
+        };
+
+        const start = randomPoint();
+        let end = randomPoint();
+        while (end === start) {
+          end = randomPoint();
         }
 
-        return {x, y};
-      };
+        console.log(start, end);
 
-      const start = randomPoint();
-      let end = randomPoint();
-      while (end === start) {
-        end = randomPoint();
-      }
+        //find path using astar
+        path = finder.findPath(start.y, start.x, end.y, end.x, grid.clone());
 
-      console.log(start, end);
+        if (path && path.length > 4) {
+          //asign spriutes to each path tile, according ot next one
+          for (let i = 0; i < path.length; i++) {
+            const x = path[i][1];
+            const y = path[i][0];
+            mapArr[y][x] = 1;
+            grid.setWalkableAt(y, x, false);
 
-      //find path using astar
-      path = finder.findPath(start.y, start.x, end.y, end.x, grid.clone());
-
-      if (path && path.length > 4) {
-        //asign spriutes to each path tile, according ot next one
-        for (let i = 0; i < path.length; i++) {
-          const x = path[i][1];
-          const y = path[i][0];
-          mapArr[y][x] = 1;
-          grid.setWalkableAt(y, x, false);
-
-          let spriteName = '';
-          if (i === 0) {
-            //first tile
-            if (path[i + 1][1] === x) {
-              //straight
-              spriteName = upStraight;
-            } else if (path[i + 1][1] > x) {
-              //right
-              spriteName = upLeft;
+            let spriteName = '';
+            if (i === 0) {
+              //first tile
+              if (path[i + 1][1] === x) {
+                //straight
+                spriteName = upStraight;
+              } else if (path[i + 1][1] > x) {
+                //right
+                spriteName = upLeft;
+              } else {
+                //left
+                spriteName = upRight;
+              }
+            } else if (i === path.length - 1) {
+              //last tile
+              if (path[i - 1][1] === x) {
+                //straight
+                spriteName = downStraight;
+              } else if (path[i - 1][1] > x) {
+                //right
+                spriteName = downLeft;
+              } else {
+                //left
+                spriteName = downRight;
+              }
             } else {
-              //left
-              spriteName = upRight;
+              //middle tile
+              if (path[i - 1][1] === x && path[i + 1][1] === x) {
+                //straight
+                spriteName = upStraight;
+              } else if (path[i - 1][1] === x && path[i + 1][1] > x) {
+                //right
+                spriteName = upLeft;
+              } else if (path[i - 1][1] === x && path[i + 1][1] < x) {
+                //left
+                spriteName = upRight;
+              } else if (path[i - 1][1] > x && path[i + 1][1] === x) {
+                //right
+                spriteName = downLeft;
+              } else if (path[i - 1][1] < x && path[i + 1][1] === x) {
+                //left
+                spriteName = downRight;
+              } else if (path[i - 1][1] > x && path[i + 1][1] > x) {
+                //right
+                spriteName = upEnd;
+              } else if (path[i - 1][1] < x && path[i + 1][1] < x) {
+                //left
+                spriteName = upEnd;
+              }
             }
-          } else if (i === path.length - 1) {
-            //last tile
-            if (path[i - 1][1] === x) {
-              //straight
-              spriteName = downStraight;
-            } else if (path[i - 1][1] > x) {
-              //right
-              spriteName = downLeft;
-            } else {
-              //left
-              spriteName = downRight;
-            }
-          } else {
-            //middle tile
-            if (path[i - 1][1] === x && path[i + 1][1] === x) {
-              //straight
-              spriteName = upStraight;
-            } else if (path[i - 1][1] === x && path[i + 1][1] > x) {
-              //right
-              spriteName = upLeft;
-            } else if (path[i - 1][1] === x && path[i + 1][1] < x) {
-              //left
-              spriteName = upRight;
-            } else if (path[i - 1][1] > x && path[i + 1][1] === x) {
-              //right
-              spriteName = downLeft;
-            } else if (path[i - 1][1] < x && path[i + 1][1] === x) {
-              //left
-              spriteName = downRight;
-            } else if (path[i - 1][1] > x && path[i + 1][1] > x) {
-              //right
-              spriteName = upEnd;
-            } else if (path[i - 1][1] < x && path[i + 1][1] < x) {
-              //left
-              spriteName = upEnd;
-            }
-          }
 
-          if (!spriteName) {
-            spriteName = pathMiddle;
-          }
+            if (!spriteName) {
+              spriteName = pathMiddle;
+            }
 
-          console.log('sprite name:', spriteName);
-          const cloneMesh = _meshes[spriteName].clone();
-          cloneMesh.position.set(
-            (y - TILE_AMOUNT / 2) * TILE_SIZE,
-            0.1,
-            (x - TILE_AMOUNT / 2) * TILE_SIZE,
-          );
-          meshes.push(cloneMesh);
-          allMeshes.push({type: 'path', x: y, y: x, mesh: cloneMesh});
+            console.log('sprite name:', spriteName);
+            const cloneMesh = _meshes[spriteName].clone();
+            cloneMesh.position.set(
+              (y - TILE_AMOUNT / 2) * TILE_SIZE,
+              0.1,
+              (x - TILE_AMOUNT / 2) * TILE_SIZE,
+            );
+            meshes.push(cloneMesh);
+            allMeshes.push({type: 'path', x: y, y: x, mesh: cloneMesh});
+          }
         }
       }
     }
@@ -424,127 +476,228 @@ export default function generateForest(_meshes) {
         houseDownRight,
       ];
 
+      const doorIndex = 7;
+      const door = [locs[doorIndex][1], locs[doorIndex][0]];
+      let hasCollider = false;
+      try {
+        hasCollider = mapArr[door[1] - 1][door[0]] === 1;
+      } catch (e) {
+        hasCollider = true;
+      }
+      console.log('has collider:', hasCollider);
+
+      if (hasCollider) {
+        return;
+      }
+
       for (let i = 0; i < locs.length; i++) {
-        mapArr[locs[i][1]][locs[i][0]] = 1; // i < 6 ? 0 : 1;
-        grid.setWalkableAt(locs[i][1], locs[i][0], false); // i < 6 ? false : true);
+        //check the tile below door if it has a collider
+        mapArr[locs[i][1]][locs[i][0]] = i < 3 ? 0 : 1;
+        grid.setWalkableAt(locs[i][1], locs[i][0], i < 3);
 
         const cloneMesh = _meshes[sprites[i]].clone();
         cloneMesh.position.set(
           (locs[i][1] - TILE_AMOUNT / 2) * TILE_SIZE,
-          0.1,
+          0.2,
           (locs[i][0] - TILE_AMOUNT / 2) * TILE_SIZE,
         );
         meshes.push(cloneMesh);
 
-        if (i === 7) {
+        if (i === doorIndex) {
           resHouses.push([locs[i][1], locs[i][0]]);
         }
       }
     });
 
     let tries = 0;
-    let le = 0;
-    while (le < 2) {
+    let _paths = [];
+    while (_paths.length < 2) {
       for (let i = 0; i < resHouses.length - 2; i += 2) {
         const start = resHouses[i];
         const end = resHouses[i + 1];
 
         //get one tile down from the start and end
-        const startDown = [start[0], start[1] + 1];
-        const endDown = [end[0], end[1] + 1];
-        const path = finder.findPath(
-          startDown[0],
-          startDown[1],
-          endDown[0],
-          endDown[1],
-          grid,
-        );
-        console.log('path now:', path, start, end);
-
+        let path = null;
+        try {
+          const startDown = [start[0], start[1] + 1];
+          const endDown = [end[0], end[1] + 1];
+          path = finder.findPath(
+            startDown[0],
+            startDown[1],
+            endDown[0],
+            endDown[1],
+            grid,
+          );
+          console.log('path now:', path, start, end, 'length', path.length);
+        } catch (e) {}
         tries++;
         if (path && path.length > 0) {
-          le++;
-          let has1s = false;
-
-          if (path && path.length > 4) {
-            //asign spriutes to each path tile, according ot next one
-            for (let i = 0; i < path.length; i++) {
-              const x = path[i][1];
-              const y = path[i][0];
-              mapArr[y][x] = 1;
-              grid.setWalkableAt(y, x, false);
-
-              let spriteName = '';
-              if (i === 0) {
-                //first tile
-                if (path[i + 1][1] === x) {
-                  //straight
-                  spriteName = upStraight;
-                } else if (path[i + 1][1] > x) {
-                  //right
-                  spriteName = upLeft;
-                } else {
-                  //left
-                  spriteName = upRight;
-                }
-              } else if (i === path.length - 1) {
-                //last tile
-                if (path[i - 1][1] === x) {
-                  //straight
-                  spriteName = downStraight;
-                } else if (path[i - 1][1] > x) {
-                  //right
-                  spriteName = downLeft;
-                } else {
-                  //left
-                  spriteName = downRight;
-                }
-              } else {
-                //middle tile
-                if (path[i - 1][1] === x && path[i + 1][1] === x) {
-                  //straight
-                  spriteName = upStraight;
-                } else if (path[i - 1][1] === x && path[i + 1][1] > x) {
-                  //right
-                  spriteName = upLeft;
-                } else if (path[i - 1][1] === x && path[i + 1][1] < x) {
-                  //left
-                  spriteName = upRight;
-                } else if (path[i - 1][1] > x && path[i + 1][1] === x) {
-                  //right
-                  spriteName = downLeft;
-                } else if (path[i - 1][1] < x && path[i + 1][1] === x) {
-                  //left
-                  spriteName = downRight;
-                } else if (path[i - 1][1] > x && path[i + 1][1] > x) {
-                  //right
-                  spriteName = upEnd;
-                } else if (path[i - 1][1] < x && path[i + 1][1] < x) {
-                  //left
-                  spriteName = upEnd;
-                }
-              }
-
-              if (!spriteName) {
-                spriteName = pathMiddle;
-              }
-
-              console.log('sprite name:', spriteName);
-              const cloneMesh = _meshes[spriteName].clone();
-              cloneMesh.position.set(
-                (y - TILE_AMOUNT / 2) * TILE_SIZE,
-                0.1,
-                (x - TILE_AMOUNT / 2) * TILE_SIZE,
-              );
-              meshes.push(cloneMesh);
-              allMeshes.push({type: 'path', x: y, y: x, mesh: cloneMesh});
-            }
-          }
+          _paths.push(path);
         }
       }
 
       if (tries > 50) {
         break;
+      }
+    }
+
+    console.log('FIRST PATHS:', _paths);
+
+    //combine all the paths
+    let paths = [];
+    _paths.forEach(path => {
+      paths = paths.concat(path);
+    });
+
+    console.log('SECOND PATHS:', paths);
+
+    //remove duplicates
+    paths = paths.filter((tile, index) => {
+      return paths.every((tile2, index2) => {
+        if (index === index2) return true;
+        return !(tile[0] === tile2[0] && tile[1] === tile2[1]);
+      });
+    });
+
+    console.log('THIRD PATHS:', paths);
+
+    console.log('FOURTH PATHS:', paths.length);
+
+    for (let i = 0; i < paths.length; i++) {
+      console.log('paths[i]', paths[i], paths[i] && paths[i].length > 0);
+      if (paths[i] && paths[i].length > 0) {
+        //asign spriutes to each path tile, according ot next one
+        const x = paths[i][1];
+        const y = paths[i][0];
+        console.log('current:', x, y);
+        mapArr[y][x] = 1;
+        grid.setWalkableAt(y, x, false);
+
+        let spriteName = '';
+        let sprite = '';
+        let distance = 0;
+        if (i > 0) {
+          distance = Math.sqrt(
+            Math.pow(paths[i][0] - paths[i - 1][0], 2) +
+              Math.pow(paths[i][1] - paths[i - 1][1], 2),
+          );
+        }
+
+        if (i === 0) {
+          //first tile
+          if (paths[i + 1][1] === x) {
+            //straight
+            spriteName = upStraight;
+          } else if (paths[i + 1][1] > x) {
+            //right
+            spriteName = upLeft;
+          } else {
+            //left
+            spriteName = upRight;
+          }
+        } else if (i === paths.length - 1) {
+          //last tile
+          if (paths[i - 1][1] === x) {
+            //straight
+            spriteName = downStraight;
+          } else if (paths[i - 1][1] > x) {
+            //right
+            spriteName = downLeft;
+          } else {
+            //left
+            spriteName = downRight;
+          }
+        } else {
+          //middle tile
+          console.log('i', i, 'i-1', i - 1);
+          if (paths[i - 1][1] === x && paths[i + 1][1] === x) {
+            //straight
+            spriteName = upStraight;
+          } else if (paths[i - 1][1] === x && paths[i + 1][1] > x) {
+            //right
+            spriteName = upLeft;
+          } else if (paths[i - 1][1] === x && paths[i + 1][1] < x) {
+            //left
+            spriteName = upRight;
+          } else if (paths[i - 1][1] > x && paths[i + 1][1] === x) {
+            //right
+            spriteName = downLeft;
+          } else if (paths[i - 1][1] < x && paths[i + 1][1] === x) {
+            //left
+            spriteName = downRight;
+          } else if (paths[i - 1][1] > x && paths[i + 1][1] > x) {
+            //right
+            spriteName = upEnd;
+          } else if (paths[i - 1][1] < x && paths[i + 1][1] < x) {
+            //left
+            spriteName = upEnd;
+          }
+        }
+
+        if (i === 0 || (i > 0 && i < i - 1 && distance > 1)) {
+          if (y < paths[i + 1][0]) {
+            sprite = leftEnd;
+          } else if (y > paths[i + 1][0]) {
+            sprite = rightEnd;
+          } else if (x < paths[i + 1][1]) {
+            sprite = upEnd;
+          } else if (x > paths[i + 1][1]) {
+            sprite = downEnd;
+          }
+        } else if (i < paths.length - 1) {
+          const d2 = Math.sqrt(
+            Math.pow(paths[i + 1][0] - paths[i][0], 2) +
+              Math.pow(paths[i + 1][1] - paths[i][1], 2),
+          );
+
+          if (d2 > 1) {
+            console.log('end of this path');
+            if (y < paths[i + 1][0]) {
+              sprite = upEnd;
+            } else if (y > paths[i + 1][0]) {
+              sprite = downEnd;
+            } else if (x < paths[i + 1][1]) {
+              sprite = rightEnd;
+            } else if (x > paths[i + 1][1]) {
+              sprite = leftEnd;
+            }
+          } else {
+            if (y < paths[i + 1][0]) {
+              sprite = upStraight;
+            } else if (y > paths[i + 1][0]) {
+              sprite = downStraight;
+            } else if (x < paths[i + 1][1]) {
+              sprite = rightStraight;
+            } else if (x > paths[i + 1][1]) {
+              sprite = leftStraight;
+            }
+          }
+        } else {
+          if (y < paths[i - 1][0]) {
+            sprite = leftEnd;
+          } else if (y > paths[i - 1][0]) {
+            sprite = rightEnd;
+          } else if (x < paths[i - 1][1]) {
+            sprite = leftEnd;
+          } else if (x > paths[i - 1][1]) {
+            sprite = rightEnd;
+          }
+        }
+
+        spriteName = sprite;
+        if (!spriteName) {
+          spriteName = miscPath;
+        }
+
+        console.log('sprite name:', spriteName);
+        const cloneMesh = _meshes[spriteName].clone();
+        cloneMesh.position.set(
+          (y - TILE_AMOUNT / 2) * TILE_SIZE,
+          0.1,
+          (x - TILE_AMOUNT / 2) * TILE_SIZE,
+        );
+        meshes.push(cloneMesh);
+        allMeshes.push({type: 'path', x: y, y: x, mesh: cloneMesh});
       }
     }
 

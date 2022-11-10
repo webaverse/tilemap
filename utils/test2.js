@@ -224,7 +224,7 @@ houseAreasFiltered.forEach(area => {
 });
 
 console.log('houses:', resHouses.length);
-let le = 0;
+let _paths = [];
 for (let i = 0; i < resHouses.length - 2; i += 2) {
   const start = resHouses[i];
   const end = resHouses[i + 1];
@@ -241,8 +241,50 @@ for (let i = 0; i < resHouses.length - 2; i += 2) {
   );
   console.log('path now:', path);
   if (path.length > 0) {
-    le++;
+    _paths.push(path);
   }
 }
 
-console.log(le);
+let paths = [];
+for (let i = 0; i < _paths.length; i++) {
+  //remove tiles that exist in other paths
+  for (let j = 0; j < _paths.length; j++) {
+    if (i === j) continue;
+    _paths[i] = _paths[i].filter(tile => {
+      return !_paths[j].some(tile2 => {
+        return tile[0] === tile2[0] && tile[1] === tile2[1];
+      });
+    });
+  }
+}
+
+_paths.forEach(path => {
+  paths = paths.concat(path);
+});
+
+//remove duplicates
+paths = paths.filter((tile, index) => {
+  return paths.every((tile2, index2) => {
+    if (index === index2) return true;
+    return !(tile[0] === tile2[0] && tile[1] === tile2[1]);
+  });
+});
+
+//rearange the path tiles to be in the right order
+paths = paths.sort((a, b) => {
+  if (a[0] === b[0]) {
+    return a[1] - b[1];
+  }
+  return a[0] - b[0];
+});
+
+console.log('res paths:', paths);
+for (let i = 0; i < paths.length; i++) {
+  if (i > 0) {
+    const distance = Math.sqrt(
+      Math.pow(paths[i][0] - paths[i - 1][0], 2) +
+        Math.pow(paths[i][1] - paths[i - 1][1], 2),
+    );
+    console.log(distance);
+  }
+}
