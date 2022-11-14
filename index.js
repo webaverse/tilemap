@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import metaversefile from 'metaversefile';
-import Tiles from './tiles.js';
+import Dungeon from './Dungeon.js';
 
 const {
   useApp,
@@ -27,12 +27,12 @@ export default e => {
   // initialization
   e.waitUntil(
     (async () => {
-      const tiles = new Tiles();
-      app.add(tiles);
+      const dungeon = new Dungeon();
+      app.add(dungeon);
 
       // load
       const _waitForLoad = async () => {
-        await Promise.all([tiles.waitForLoad()]);
+        await Promise.all([dungeon.waitForLoad()]);
       };
       await _waitForLoad();
 
