@@ -1,7 +1,11 @@
 import * as THREE from 'three';
 import AssetManager from './AssetManager.js';
 import data from './dungeon.json';
-import {tilesTextures} from './utils/textures.js';
+import {
+  monstersTextures,
+  propsTextures,
+  tilesTextures,
+} from './utils/textures.js';
 
 export default class Dungeon extends THREE.Object3D {
   constructor() {
@@ -32,12 +36,15 @@ export default class Dungeon extends THREE.Object3D {
   generate(assets) {
     // Draw
     this.drawTiles(data.layers.tiles, tilesTextures(assets));
+    this.drawProps(data.layers.props, propsTextures(assets));
+    this.drawMonsters(data.layers.monsters, monstersTextures(assets));
   }
 
   drawTiles = (tilemap, sprites) => {
     for (let y = 0; y < tilemap.length; y++) {
       for (let x = 0; x < tilemap[y].length; x++) {
         const id = tilemap[y][x];
+        console.log(id);
         const texture = sprites[id];
         if (texture) {
           const geometry = new THREE.PlaneGeometry(
@@ -63,6 +70,88 @@ export default class Dungeon extends THREE.Object3D {
           const sprite = new THREE.Mesh(geometry, material);
           sprite.position.set(x * this.unitInPixels, 0, y * this.unitInPixels);
           this.tileGroup.add(sprite);
+        }
+      }
+    }
+  };
+
+  drawProps = (tilemap, sprites) => {
+    for (let y = 0; y < tilemap.length; y++) {
+      for (let x = 0; x < tilemap[y].length; x++) {
+        const id = tilemap[y][x];
+        if (id === 0) {
+          continue;
+        }
+
+        const texture = sprites[id];
+        if (texture) {
+          const geometry = new THREE.PlaneGeometry(
+            this.unitInPixels,
+            this.unitInPixels,
+            1,
+            1,
+          );
+          geometry.rotateX(-Math.PI / 2);
+          const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            transparent: true,
+          });
+          const sprite = new THREE.Mesh(geometry, material);
+          sprite.position.set(x * this.unitInPixels, 0, y * this.unitInPixels);
+          this.propGroup.add(sprite);
+        } else {
+          const geometry = new THREE.PlaneGeometry(
+            this.unitInPixels,
+            this.unitInPixels,
+            1,
+            1,
+          );
+          geometry.rotateX(-Math.PI / 2);
+          const material = new THREE.MeshStandardMaterial({color: 0x00ff00});
+          const sprite = new THREE.Mesh(geometry, material);
+          sprite.position.set(x * this.unitInPixels, 0, y * this.unitInPixels);
+          this.propGroup.add(sprite);
+        }
+      }
+    }
+  };
+
+  drawMonsters = (tilemap, sprites) => {
+    for (let y = 0; y < tilemap.length; y++) {
+      for (let x = 0; x < tilemap[y].length; x++) {
+        const id = tilemap[y][x];
+        if (id === 0) {
+          continue;
+        }
+
+        const texture = sprites[id];
+        if (texture) {
+          const geometry = new THREE.PlaneGeometry(
+            this.unitInPixels,
+            this.unitInPixels,
+            1,
+            1,
+          );
+          geometry.rotateX(-Math.PI / 2);
+          const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            transparent: true,
+          });
+          const sprite = new THREE.Mesh(geometry, material);
+          sprite.position.set(x * this.unitInPixels, 0, y * this.unitInPixels);
+          this.monsterGroup.add(sprite);
+        } else {
+          const geometry = new THREE.PlaneGeometry(
+            this.unitInPixels,
+            this.unitInPixels,
+            1,
+            1,
+          );
+          geometry.rotateX(-Math.PI / 2);
+          const material = new THREE.MeshStandardMaterial({color: 0x0000ff});
+          const sprite = new THREE.Mesh(geometry, material);
+          sprite.position.set(x * this.unitInPixels, 0, y * this.unitInPixels);
+          this.monsterGroup.add(sprite);
         }
       }
     }
