@@ -3,7 +3,26 @@ import Perlin from './utils/perlinNoise';
 import {BufferedCubicNoise} from './utils/bufferedCubicNoise';
 import PF from 'pathfinding';
 
-export default function generateForest(_meshes) {
+//move the generation into a test script, to log 10s map
+//remove object spawn from the start that is random
+//get locations that are 2x2 or 3x3 and spawn trees
+//get random locations afterwords to spawn other objects too
+export default function generateForest(
+  _meshes,
+  deepForestTiles,
+  forestTiles,
+  stoneTiles,
+  grassTiles,
+  sandTiles,
+  waterTiles,
+  treeTiles,
+  rockTiles,
+  flowerTiles,
+  bushNormalTiles,
+  bushSandTiles,
+  torchTiles,
+  info,
+) {
   const multipliers = {};
   multipliers['trees'] = 0.75;
   multipliers['rocks'] = 1;
@@ -12,44 +31,10 @@ export default function generateForest(_meshes) {
   multipliers['bush_normal'] = 1;
   multipliers['bush_sand'] = 1;
 
-  const addRandomPath = false;
+  const addRandomPath = true;
+  const addRandomTrees = true;
+  const allPaths = [];
 
-  const deepForestTiles = ['sprite_199'];
-  const forestTiles = ['sprite_199'];
-  const stoneTiles = ['sprite_064'];
-  const grassTiles = ['sprite_010', 'sprite_013', 'sprite_016'];
-  const sandTiles = ['sprite_197', 'sprite_198'];
-  const waterTiles = [
-    'sprite_192',
-    'sprite_193',
-    'sprite_194',
-    'sprite_195',
-    'sprite_196',
-  ];
-  const treeTiles = [
-    ['sprite_170', 'sprite_169'],
-    ['sprite_172', 'sprite_171'],
-    ['sprite_226', 'sprite_225'],
-    ['sprite_228', 'sprite_227'],
-  ];
-  const rockTiles = ['sprite_176', 'sprite_177', ['sprite_229', 'sprite_178']];
-  const flowerTiles = [
-    'sprite_179',
-    'sprite_180',
-    'sprite_181',
-    'sprite_182',
-    'sprite_183',
-    'sprite_184',
-    'sprite_185',
-    'sprite_186',
-    'sprite_187',
-    'sprite_188',
-    'sprite_189',
-    'sprite_190',
-    'sprite_191',
-  ];
-  const bushNormalTiles = ['sprite_173', 'sprite_175'];
-  const bushSandTiles = ['sprite_174'];
   const monsterTiles = [
     'sprite_200',
     'sprite_201',
@@ -94,22 +79,27 @@ export default function generateForest(_meshes) {
         ? flowerTiles[Math.floor(Math.random() * flowerTiles.length)]
         : type === 'bush_normal'
         ? bushNormalTiles[Math.floor(Math.random() * bushNormalTiles.length)]
-        : bushSandTiles[Math.floor(Math.random() * bushSandTiles.length)];
+        : type === 'bush_sand'
+        ? bushSandTiles[Math.floor(Math.random() * bushSandTiles.length)]
+        : torchTiles[Math.floor(Math.random() * torchTiles.length)];
 
     let prop2 = '';
-    if (typeof prop !== 'string') {
-      prop2 = prop[1];
-      prop = prop[0];
+    if (type === 'tree' && prop.split('_').length - 1 === 2) {
+      prop2 = prop.trim().slice(0, -1) + '1';
+      while (prop2 == prop) {
+        const letter = prop.endsWith('1') ? '0' : '1';
+        prop = prop.slice(0, -1) + letter;
+      }
     }
 
     const cloneTreeMesh = _meshes[prop].clone();
     cloneTreeMesh.position.set(
       (y - TILE_AMOUNT / 2) * TILE_SIZE,
-      0.01,
+      type === 'bush_normal' || type === 'bush_sand' ? 0.02 : 0.01,
       (x - TILE_AMOUNT / 2) * TILE_SIZE,
     );
     meshes.push(cloneTreeMesh);
-    allMeshes.push({type: 'prop', x, y, mesh: cloneTreeMesh});
+    allMeshes.push({type: prop, x, y, mesh: cloneTreeMesh});
 
     if (prop2) {
       addSecondPart(x, y, prop2);
@@ -145,11 +135,9 @@ export default function generateForest(_meshes) {
         }
 
         const n1 = Math.round(
-          //cubicNoise.sample(x / scales[0], y / scales[0], 0) * range,
           pn.noise(x / scales[0], y / scales[0], 0) * range,
         );
         const n2 = Math.round(
-          //cubicNoise.sample(x / scales[1], y / scales[1], 0) * range,
           pn.noise(x / scales[1], y / scales[1], 0) * range,
         );
         const num = addLayers(n1, n2);
@@ -160,9 +148,12 @@ export default function generateForest(_meshes) {
           mapArr[y][x] = 0;
           tileName =
             deepForestTiles[Math.floor(Math.random() * deepForestTiles.length)];
+
           const rnd = Math.random();
-          if (rnd < 0.25 * multipliers['trees']) {
-            addProp('tree', x, y);
+          if (rnd < 0.05 * multipliers['bush_normal']) {
+            addProp('bush_normal', x, y);
+          } else if (rnd < 0.5 * multipliers['flowers']) {
+            addProp('flower', x, y);
           }
         } else if (num <= 35) {
           mapArr[y][x] = 0;
@@ -178,9 +169,7 @@ export default function generateForest(_meshes) {
             forestTiles[Math.floor(Math.random() * forestTiles.length)];
 
           const rnd = Math.random();
-          if (rnd < 0.025 * multipliers['trees']) {
-            addProp('tree', x, y);
-          } else if (rnd < 0.075 * multipliers['rocks']) {
+          if (rnd < 0.075 * multipliers['rocks']) {
             addProp('stone', x, y);
           } else if (rnd < 0.4 * multipliers['flowers']) {
             addProp('flower', x, y);
@@ -218,7 +207,7 @@ export default function generateForest(_meshes) {
             (x - TILE_AMOUNT / 2) * TILE_SIZE,
           );
           meshes.push(cloneMesh);
-          allMeshes.push({type: 'tile', x: y, y: x, mesh: cloneMesh});
+          allMeshes.push({type: tileName, x: y, y: x, mesh: cloneMesh});
         }
       }
     }
@@ -230,24 +219,21 @@ export default function generateForest(_meshes) {
       }
       str += '\n';
     }
-    console.log(str);
 
-    console.log('===========================================');
-
-    const upStraight = 'sprite_211';
-    const downStraight = 'sprite_211';
-    const upLeft = 'sprite_206';
-    const upRight = 'sprite_207';
-    const downLeft = 'sprite_208';
-    const downRight = 'sprite_213';
-    const upEnd = 'sprite_213';
-    const pathMiddle = 'sprite_213';
-    const rightStraight = 'sprite_211';
-    const leftStraight = 'sprite_211';
-    const downEnd = 'sprite_213';
-    const miscPath = 'sprite_213';
-    const rightEnd = 'sprite_213';
-    const leftEnd = 'sprite_213';
+    const upStraight = info + ' path Up Straight_0';
+    const downStraight = info + ' path Down Straight_0';
+    const upLeft = info + ' path Up Left_0';
+    const upRight = info + ' path Up Right_0';
+    const downLeft = info + ' path Down Left_0';
+    const downRight = info + ' path Down Right_0';
+    const upEnd = info + ' path Up End_0';
+    const pathMiddle = info + ' path Middle_0';
+    const rightStraight = info + ' path Right Straight_0';
+    const leftStraight = info + ' path Left Straight_0';
+    const downEnd = info + ' path Down End_0';
+    const miscPath = info + ' path Misc_0';
+    const rightEnd = info + ' path Right End_0';
+    const leftEnd = info + ' path Left End_0';
 
     /*  const upStraight = 'sprite_211';
     const downStraight = 'sprite_211';
@@ -265,17 +251,105 @@ export default function generateForest(_meshes) {
     const leftEnd = 'sprite_215';*/
 
     let path = [];
+
+    const treeAreas = [];
+    for (let i = 0; i < TILE_AMOUNT; i++) {
+      for (let j = 0; j < TILE_AMOUNT; j++) {
+        const x = j;
+        const y = i;
+        if (mapArr[x][y] === 0) {
+          try {
+            if (
+              mapArr[x][y + 1] === 0 &&
+              mapArr[x][y + 2] === 0 &&
+              mapArr[x + 1][y] === 0 &&
+              mapArr[x + 1][y + 1] === 0 &&
+              mapArr[x + 1][y + 2] === 0 &&
+              mapArr[x + 2][y] === 0 &&
+              mapArr[x + 2][y + 1] === 0 &&
+              mapArr[x + 2][y + 2] === 0
+            ) {
+              treeAreas.push([x, y]);
+            }
+          } catch (e) {}
+        }
+      }
+    }
+
+    console.log(treeAreas);
+
+    let treeAreasFiltered = treeAreas.filter((area, index) => {
+      return treeAreas.every((area2, index2) => {
+        if (index === index2) return true;
+        return !(
+          area[0] >= area2[0] &&
+          area[0] <= area2[0] + 2 &&
+          area[1] >= area2[1] &&
+          area[1] <= area2[1] + 2
+        );
+      });
+    });
+
+    //remove some houses randomly
+    treeAreasFiltered = treeAreasFiltered.filter((area, index) => {
+      return Math.random() < 0.65;
+    });
+
+    console.log(treeAreasFiltered);
+
+    treeAreasFiltered.forEach(area => {
+      const i = area[1];
+      const j = area[0];
+
+      const locs = [
+        [i + 1, j],
+        [i + 1, j + 1],
+        [i + 1, j + 2],
+        [i + 2, j],
+        [i + 2, j + 1],
+        [i + 2, j + 2],
+      ];
+
+      for (let i = 0; i < locs.length; i++) {
+        console.log('adding tree at:', locs[i][1], locs[i][0]);
+        addProp('tree', locs[i][0], locs[i][1]);
+        console.log('added tree at:', locs[i][1], locs[i][0]);
+      }
+    });
+
+    if (addRandomTrees) {
+      for (let i = 0; i < TILE_AMOUNT; i++) {
+        for (let j = 0; j < TILE_AMOUNT; j++) {
+          const x = j;
+          const y = i;
+          if (mapArr[x][y] === 0) {
+            const rnd = Math.random();
+            if (rnd < 0.05) {
+              addProp('tree', y, x);
+            }
+          }
+        }
+      }
+    }
+
+    console.log('trees spawned');
+
     const grid = new PF.Grid(TILE_AMOUNT, TILE_AMOUNT);
     for (let x = 0; x < TILE_AMOUNT; x++) {
       for (let y = 0; y < TILE_AMOUNT; y++) {
-        console.log(x, y);
         grid.setWalkableAt(y, x, mapArr[y][x] === 0);
       }
     }
     const finder = new PF.AStarFinder();
 
     if (addRandomPath) {
+      let tries = 0;
       while (path.length <= 4) {
+        if (tries > 5) {
+          break;
+        }
+
+        tries++;
         const randomPoint = () => {
           let x = Math.floor(Math.random() * TILE_AMOUNT);
           let y = Math.floor(Math.random() * TILE_AMOUNT);
@@ -294,12 +368,11 @@ export default function generateForest(_meshes) {
           end = randomPoint();
         }
 
-        console.log(start, end);
-
         //find path using astar
         path = finder.findPath(start.y, start.x, end.y, end.x, grid.clone());
 
         if (path && path.length > 4) {
+          allPaths.push(path);
           //asign spriutes to each path tile, according ot next one
           for (let i = 0; i < path.length; i++) {
             const x = path[i][1];
@@ -362,7 +435,6 @@ export default function generateForest(_meshes) {
               spriteName = pathMiddle;
             }
 
-            console.log('sprite name:', spriteName);
             const cloneMesh = _meshes[spriteName].clone();
             cloneMesh.position.set(
               (y - TILE_AMOUNT / 2) * TILE_SIZE,
@@ -370,11 +442,13 @@ export default function generateForest(_meshes) {
               (x - TILE_AMOUNT / 2) * TILE_SIZE,
             );
             meshes.push(cloneMesh);
-            allMeshes.push({type: 'path', x: y, y: x, mesh: cloneMesh});
+            allMeshes.push({type: spriteName, x: y, y: x, mesh: cloneMesh});
           }
         }
       }
     }
+
+    console.log('path generated');
 
     //find areas inside the map with 0s that a house can be placed
     const houseAreas = [];
@@ -400,7 +474,8 @@ export default function generateForest(_meshes) {
         }
       }
     }
-    console.log('houses:', houseAreas.length);
+
+    console.log('Got houses');
 
     //remove overlapping areas
     let houseAreasFiltered = houseAreas.filter((area, index) => {
@@ -428,25 +503,22 @@ export default function generateForest(_meshes) {
       });
     });
 
-    console.log('filtered houses:', houseAreasFiltered.length);
-
     //remove some houses randomly
     houseAreasFiltered = houseAreasFiltered.filter((area, index) => {
       return Math.random() < 0.5;
     });
 
-    console.log('filtered houses:', houseAreasFiltered.length);
+    const houseUpLeft = info + ' house Up Left_0';
+    const houseUpMiddle = info + ' house Up Middle_0';
+    const houseUpRight = info + ' house Up Right_0';
+    const houseMiddleLeft = info + ' house Middle Left_0';
+    const houseMiddleMiddle = info + ' house Middle Middle_0';
+    const houseMiddleRight = info + ' house Middle Right_0';
+    const houseDownLeft = info + ' house Down Left_0';
+    const houseDownMiddle = info + ' house Down Middle_0';
+    const houseDownRight = info + ' house Down Right_0';
 
-    const houseUpLeft = 'sprite_216';
-    const houseUpMiddle = 'sprite_217';
-    const houseUpRight = 'sprite_218';
-    const houseMiddleLeft = 'sprite_219';
-    const houseMiddleMiddle = 'sprite_220';
-    const houseMiddleRight = 'sprite_221';
-    const houseDownLeft = 'sprite_222';
-    const houseDownMiddle = 'sprite_223';
-    const houseDownRight = 'sprite_224';
-
+    console.log('spawning houses');
     const resHouses = [];
     //place houses in the areas
     houseAreasFiltered.forEach(area => {
@@ -480,11 +552,10 @@ export default function generateForest(_meshes) {
       const door = [locs[doorIndex][1], locs[doorIndex][0]];
       let hasCollider = false;
       try {
-        hasCollider = mapArr[door[1] - 1][door[0]] === 1;
+        hasCollider = mapArr[door[1] + 1][door[0]] === 1;
       } catch (e) {
         hasCollider = true;
       }
-      console.log('has collider:', hasCollider);
 
       if (hasCollider) {
         return;
@@ -509,9 +580,15 @@ export default function generateForest(_meshes) {
       }
     });
 
+    console.log('houses spawned');
     let tries = 0;
     let _paths = [];
+    let _tries = 0;
     while (_paths.length < 2) {
+      if (tries > 5) {
+        break;
+      }
+      tries++;
       for (let i = 0; i < resHouses.length - 2; i += 2) {
         const start = resHouses[i];
         const end = resHouses[i + 1];
@@ -528,7 +605,6 @@ export default function generateForest(_meshes) {
             endDown[1],
             grid,
           );
-          console.log('path now:', path, start, end, 'length', path.length);
         } catch (e) {}
         tries++;
         if (path && path.length > 0) {
@@ -541,15 +617,11 @@ export default function generateForest(_meshes) {
       }
     }
 
-    console.log('FIRST PATHS:', _paths);
-
     //combine all the paths
     let paths = [];
     _paths.forEach(path => {
       paths = paths.concat(path);
     });
-
-    console.log('SECOND PATHS:', paths);
 
     //remove duplicates
     paths = paths.filter((tile, index) => {
@@ -559,17 +631,12 @@ export default function generateForest(_meshes) {
       });
     });
 
-    console.log('THIRD PATHS:', paths);
-
-    console.log('FOURTH PATHS:', paths.length);
-
     for (let i = 0; i < paths.length; i++) {
-      console.log('paths[i]', paths[i], paths[i] && paths[i].length > 0);
       if (paths[i] && paths[i].length > 0) {
+        allPaths.push(paths[i]);
         //asign spriutes to each path tile, according ot next one
         const x = paths[i][1];
         const y = paths[i][0];
-        console.log('current:', x, y);
         mapArr[y][x] = 1;
         grid.setWalkableAt(y, x, false);
 
@@ -609,7 +676,6 @@ export default function generateForest(_meshes) {
           }
         } else {
           //middle tile
-          console.log('i', i, 'i-1', i - 1);
           if (paths[i - 1][1] === x && paths[i + 1][1] === x) {
             //straight
             spriteName = upStraight;
@@ -651,7 +717,6 @@ export default function generateForest(_meshes) {
           );
 
           if (d2 > 1) {
-            console.log('end of this path');
             if (y < paths[i + 1][0]) {
               sprite = upEnd;
             } else if (y > paths[i + 1][0]) {
@@ -689,7 +754,8 @@ export default function generateForest(_meshes) {
           spriteName = miscPath;
         }
 
-        console.log('sprite name:', spriteName);
+        mapArr[y][x] = 1;
+        grid.setWalkableAt(y, x, false);
         const cloneMesh = _meshes[spriteName].clone();
         cloneMesh.position.set(
           (y - TILE_AMOUNT / 2) * TILE_SIZE,
@@ -697,8 +763,54 @@ export default function generateForest(_meshes) {
           (x - TILE_AMOUNT / 2) * TILE_SIZE,
         );
         meshes.push(cloneMesh);
-        allMeshes.push({type: 'path', x: y, y: x, mesh: cloneMesh});
+        allMeshes.push({type: spriteName, x: y, y: x, mesh: cloneMesh});
       }
+    }
+
+    //get tiles near to each path
+    const pathTiles = [];
+    for (let i = 0; i < paths.length; i++) {
+      const path = allPaths[i];
+      console.log('path:', path[i]);
+      for (let j = 0; j < path.length; j++) {
+        const x = path[j][1];
+        const y = path[j][0];
+        const tiles = [
+          [y - 1, x - 1],
+          [y - 1, x],
+          [y - 1, x + 1],
+          [y, x - 1],
+          [y, x + 1],
+          [y + 1, x - 1],
+          [y + 1, x],
+          [y + 1, x + 1],
+        ];
+        pathTiles.push(...tiles);
+      }
+    }
+
+    console.log('pathTiles:', pathTiles);
+
+    //keep some path tiles randomly
+    const pathTilesFiltered = pathTiles.filter((tile, index) => {
+      return Math.random() < 0.04;
+    });
+
+    console.log('pathTiles:', pathTilesFiltered);
+
+    //remove tiles that are 1s
+    const pathTilesFiltered2 = pathTilesFiltered.filter((tile, index) => {
+      console.log(tile, mapArr[tile[0]]);
+      return mapArr[tile[1]] && mapArr[tile[1]][tile[0]] !== 1;
+    });
+
+    console.log('pathTiles:', pathTilesFiltered2.length);
+
+    for (let i = 0; i < pathTilesFiltered2.length; i++) {
+      const x = pathTilesFiltered2[i][0];
+      const y = pathTilesFiltered2[i][1];
+      console.log('torch at:', y, x);
+      addProp('torch', y, x);
     }
 
     const c2 = [];
@@ -739,18 +851,14 @@ export default function generateForest(_meshes) {
       });
     });
 
-    console.log(centers);
-
     const monsters = [];
     for (const center of centers) {
-      console.log('current center:', center);
       const rnd = Math.random();
 
       let monster =
         monsterTiles[Math.floor(Math.random() * monsterTiles.length)];
 
       const cloneMesh = _meshes[monster].clone();
-      console.log('spawning the monster: ', monster, 'at:', center);
       cloneMesh.position.set(
         (center[1] - TILE_AMOUNT / 2) * TILE_SIZE,
         0.1,
@@ -761,5 +869,5 @@ export default function generateForest(_meshes) {
     }
   }
 
-  return meshes;
+  return {meshes: meshes, allMeshes: allMeshes};
 }

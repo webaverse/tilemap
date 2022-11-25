@@ -48,9 +48,6 @@ for (let x = i; x < TILE_AMOUNT + i; x++) {
     if (num <= 20) {
       mapArr[y][x] = 0;
       const rnd = Math.random();
-      if (rnd < 0.25) {
-        addProp('tree', x, y);
-      }
     } else if (num <= 35) {
       mapArr[y][x] = 0;
 
@@ -62,9 +59,7 @@ for (let x = i; x < TILE_AMOUNT + i; x++) {
       mapArr[y][x] = 0;
 
       const rnd = Math.random();
-      if (rnd < 0.025) {
-        addProp('tree', x, y);
-      } else if (rnd < 0.075) {
+      if (rnd < 0.075) {
         addProp('stone', x, y);
       } else if (rnd < 0.4) {
         addProp('flower', x, y);
@@ -100,8 +95,7 @@ for (const x in mapArr) {
 }
 console.log(str);
 
-//find areas inside the map with 0s that a house can be placed
-const houseAreas = [];
+const treeAreas = [];
 for (let i = 0; i < TILE_AMOUNT; i++) {
   for (let j = 0; j < TILE_AMOUNT; j++) {
     const x = j;
@@ -118,17 +112,15 @@ for (let i = 0; i < TILE_AMOUNT; i++) {
           mapArr[x + 2][y + 1] === 0 &&
           mapArr[x + 2][y + 2] === 0
         ) {
-          houseAreas.push([x, y]);
+          treeAreas.push([x, y]);
         }
       } catch (e) {}
     }
   }
 }
-console.log('houses:', houseAreas.length);
 
-//remove overlapping areas
-let houseAreasFiltered = houseAreas.filter((area, index) => {
-  return houseAreas.every((area2, index2) => {
+let treeAreasFiltered = treeAreas.filter((area, index) => {
+  return treeAreas.every((area2, index2) => {
     if (index === index2) return true;
     return !(
       area[0] >= area2[0] &&
@@ -140,8 +132,8 @@ let houseAreasFiltered = houseAreas.filter((area, index) => {
 });
 
 //remove the houses that are too close together
-houseAreasFiltered = houseAreasFiltered.filter((area, index) => {
-  return houseAreasFiltered.every((area2, index2) => {
+treeAreasFiltered = treeAreasFiltered.filter((area, index) => {
+  return treeAreasFiltered.every((area2, index2) => {
     if (index === index2) return true;
     return !(
       area[0] >= area2[0] - 2 &&
@@ -152,41 +144,12 @@ houseAreasFiltered = houseAreasFiltered.filter((area, index) => {
   });
 });
 
-console.log('filtered houses:', houseAreasFiltered.length);
+//remove some houses randomly
+treeAreasFiltered = treeAreasFiltered.filter((area, index) => {
+  return Math.random() < 0.5;
+});
 
-console.log('filtered houses:', houseAreasFiltered.length);
-
-const houseUpLeft = 'sprite_216';
-const houseUpMiddle = 'sprite_217';
-const houseUpRight = 'sprite_218';
-const houseMiddleLeft = 'sprite_219';
-const houseMiddleMiddle = 'sprite_220';
-const houseMiddleRight = 'sprite_221';
-const houseDownLeft = 'sprite_222';
-const houseDownMiddle = 'sprite_223';
-const houseDownRight = 'sprite_224';
-
-const upStraight = 'sprite_211';
-const downStraight = 'sprite_211';
-const upLeft = 'sprite_207';
-const upRight = 'sprite_206';
-const downLeft = 'sprite_209';
-const downRight = 'sprite_208';
-const upEnd = 'sprite_213';
-
-const resHouses = [];
-const grid = new PF.Grid(TILE_AMOUNT, TILE_AMOUNT);
-
-for (let x = 0; x < TILE_AMOUNT; x++) {
-  for (let y = 0; y < TILE_AMOUNT; y++) {
-    grid.setWalkableAt(y, x, mapArr[y][x] === 0);
-  }
-}
-
-const finder = new PF.AStarFinder();
-
-//place houses in the areas
-houseAreasFiltered.forEach(area => {
+treeAreasFiltered.forEach(area => {
   const i = area[1];
   const j = area[0];
 
@@ -197,94 +160,98 @@ houseAreasFiltered.forEach(area => {
     [i + 1, j],
     [i + 1, j + 1],
     [i + 1, j + 2],
-    [i + 2, j],
-    [i + 2, j + 1],
-    [i + 2, j + 2],
-  ];
-  const sprites = [
-    houseUpLeft,
-    houseUpMiddle,
-    houseUpRight,
-    houseMiddleLeft,
-    houseMiddleMiddle,
-    houseMiddleRight,
-    houseDownLeft,
-    houseDownMiddle,
-    houseDownRight,
   ];
 
   for (let i = 0; i < locs.length; i++) {
-    mapArr[locs[i][1]][locs[i][0]] = 1; // i < 6 ? 0 : 1;
-    grid.setWalkableAt(locs[i][1], locs[i][0], false); // i < 6 ? false : true);
+    addProp('tree', locs[i][1], locs[i][0]);
+  }
+});
 
-    if (i === 7) {
-      resHouses.push([locs[i][1], locs[i][0]]);
+//add some trees randomly
+for (let i = 0; i < TILE_AMOUNT; i++) {
+  for (let j = 0; j < TILE_AMOUNT; j++) {
+    const x = j;
+    const y = i;
+    if (mapArr[x][y] === 0) {
+      const rnd = Math.random();
+      if (rnd < 0.05) {
+        addProp('tree', x, y);
+      }
     }
   }
-});
+}
 
-console.log('houses:', resHouses.length);
-let _paths = [];
-for (let i = 0; i < resHouses.length - 2; i += 2) {
-  const start = resHouses[i];
-  const end = resHouses[i + 1];
-
-  //get one tile down from the start and end
-  const startDown = [start[0], start[1] + 1];
-  const endDown = [end[0], end[1] + 1];
-  const path = finder.findPath(
-    startDown[0],
-    startDown[1],
-    endDown[0],
-    endDown[1],
-    grid,
-  );
-  console.log('path now:', path);
-  if (path.length > 0) {
-    _paths.push(path);
+const grid = new PF.Grid(TILE_AMOUNT, TILE_AMOUNT);
+for (let x = 0; x < TILE_AMOUNT; x++) {
+  for (let y = 0; y < TILE_AMOUNT; y++) {
+    grid.setWalkableAt(y, x, mapArr[y][x] === 0);
   }
 }
+const finder = new PF.AStarFinder();
 
 let paths = [];
-for (let i = 0; i < _paths.length; i++) {
-  //remove tiles that exist in other paths
-  for (let j = 0; j < _paths.length; j++) {
-    if (i === j) continue;
-    _paths[i] = _paths[i].filter(tile => {
-      return !_paths[j].some(tile2 => {
-        return tile[0] === tile2[0] && tile[1] === tile2[1];
-      });
-    });
+let path = [];
+while (path.length <= 4) {
+  const randomPoint = () => {
+    let x = Math.floor(Math.random() * TILE_AMOUNT);
+    let y = Math.floor(Math.random() * TILE_AMOUNT);
+
+    while (mapArr[y][x] == 1) {
+      x = Math.floor(Math.random() * TILE_AMOUNT);
+      y = Math.floor(Math.random() * TILE_AMOUNT);
+    }
+
+    return {x, y};
+  };
+
+  const start = randomPoint();
+  let end = randomPoint();
+  while (end === start) {
+    end = randomPoint();
+  }
+
+  //find path using astar
+  path = finder.findPath(start.y, start.x, end.y, end.x, grid.clone());
+
+  if (path && path.length > 4) {
+    console.log('path added');
+    paths.push(path);
+    //asign spriutes to each path tile, according ot next one
+    for (let i = 0; i < path.length; i++) {
+      const x = path[i][1];
+      const y = path[i][0];
+      mapArr[y][x] = 1;
+      grid.setWalkableAt(y, x, false);
+    }
   }
 }
 
-_paths.forEach(path => {
-  paths = paths.concat(path);
-});
-
-//remove duplicates
-paths = paths.filter((tile, index) => {
-  return paths.every((tile2, index2) => {
-    if (index === index2) return true;
-    return !(tile[0] === tile2[0] && tile[1] === tile2[1]);
-  });
-});
-
-//rearange the path tiles to be in the right order
-paths = paths.sort((a, b) => {
-  if (a[0] === b[0]) {
-    return a[1] - b[1];
-  }
-  return a[0] - b[0];
-});
-
-console.log('res paths:', paths);
+//get tiles near to each path
+const pathTiles = [];
 for (let i = 0; i < paths.length; i++) {
-  if (i > 0) {
-    const distance = Math.sqrt(
-      Math.pow(paths[i][0] - paths[i - 1][0], 2) +
-        Math.pow(paths[i][1] - paths[i - 1][1], 2),
-    );
-    console.log(distance);
+  const path = paths[i];
+  for (let j = 0; j < path.length; j++) {
+    const x = path[j][1];
+    const y = path[j][0];
+    const tiles = [
+      [y - 1, x - 1],
+      [y - 1, x],
+      [y - 1, x + 1],
+      [y, x - 1],
+      [y, x + 1],
+      [y + 1, x - 1],
+      [y + 1, x],
+      [y + 1, x + 1],
+    ];
+    pathTiles.push(...tiles);
   }
 }
+
+console.log(pathTiles.length);
+
+//keep some path tiles randomly
+const pathTilesFiltered = pathTiles.filter((tile, index) => {
+  return Math.random() < 0.025;
+});
+
+console.log(pathTilesFiltered.length);
