@@ -123,6 +123,9 @@ export const TileDirection = {
 export const TileType = {
   Hole: -1,
   Wall: 1,
+  All: 46,
+  Door: 48,
+  Ground: 0,
 };
 export const TileTypes = ['Hole', 'Wall'];
 
@@ -176,6 +179,7 @@ export const PropTypes = [
   'Torch',
   'WebLeft',
   'WebRight',
+  'Arrow',
 ];
 
 //
@@ -205,4 +209,16 @@ export const MonsterTypes = [
 //
 // Tilemap
 //
+export const TileLayer = {
+  tiles: 0,
+  props: 1,
+  monsters: 2,
+};
 export const TileLayers = ['tiles', 'props', 'monsters'];
+
+export const Direction = {
+  up: 0,
+  right: 1,
+  down: 2,
+  left: 3,
+};

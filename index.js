@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import metaversefile from 'metaversefile';
-import Dungeon from './Dungeon.js';
+import Dungeon from './dungeon/Dungeon.js';
 
 const {
   useApp,

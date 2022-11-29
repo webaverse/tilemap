@@ -1,4 +1,4 @@
-import {MonsterType, PropType} from './types.js';
+import {MonsterType, PropType} from '../generate/index.js';
 
 export const tilesTextures = texture_asset => {
   return {
@@ -52,6 +52,7 @@ export const tilesTextures = texture_asset => {
     45: texture_asset.nw.texture,
     46: texture_asset.all.texture,
     47: texture_asset.s.texture,
+    48: texture_asset.door.texture,
   };
 };
 
