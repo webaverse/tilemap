@@ -7,7 +7,12 @@ export default class Dungeon extends THREE.Object3D {
   constructor() {
     super();
     this.name = 'dungeon';
-    this.dungeon = generate({
+  }
+
+  async waitForLoad() {
+    const assetManager = new AssetManager();
+    const assets = await assetManager.load();
+    const dungeon = generate({
       mapWidth: 40,
       mapHeight: 20,
       mapGutterWidth: 2,
@@ -21,16 +26,11 @@ export default class Dungeon extends THREE.Object3D {
       debug: false,
       rooms: Data.loadRooms(),
     });
-    console.log(this.dungeon);
+    this.drawDungeon(assets, dungeon);
   }
 
-  async waitForLoad() {
-    const assetManager = new AssetManager();
-    const assets = await assetManager.load();
-    this.generate(assets);
-  }
-
-  generate(assets) {
+  drawDungeon(assets, dungeon) {
     console.log(assets);
+    console.log(dungeon);
   }
 }
