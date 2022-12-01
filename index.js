@@ -28,7 +28,7 @@ export default e => {
   e.waitUntil(
     (async () => {
       const dungeon = new Dungeon();
-      app.add(dungeon);
+      app.add(dungeon.pivot);
 
       // load
       const _waitForLoad = async () => {
@@ -37,7 +37,9 @@ export default e => {
       await _waitForLoad();
 
       // frame handling
-      frameCb = () => {};
+      frameCb = () => {
+        dungeon.update();
+      };
     })(),
   );
 
