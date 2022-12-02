@@ -29,6 +29,7 @@ export default e => {
     (async () => {
       const dungeon = new Dungeon();
       app.add(dungeon.pivot);
+      dungeon.pivot.updateMatrixWorld();
 
       // load
       const _waitForLoad = async () => {
@@ -38,7 +39,7 @@ export default e => {
 
       // frame handling
       frameCb = () => {
-        dungeon.update();
+        dungeon.frame();
       };
     })(),
   );
