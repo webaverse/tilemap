@@ -13,9 +13,9 @@ import {
   duplicateTilemap,
   random,
   randomChoice,
-  randomNumber,
 } from './utils.js';
 import seedrandom from 'seedrandom';
+import {nanoid} from 'nanoid';
 
 export function generate(args) {
   // If a seed is provided, use it to generate dungeon.
@@ -29,6 +29,7 @@ export function generate(args) {
   const monsters = createMonstersLayer(tree, args);
 
   return {
+    args,
     seed: args.seed,
     width: args.mapWidth,
     height: args.mapHeight,
@@ -38,7 +39,36 @@ export function generate(args) {
       props,
       monsters,
     },
+    nearSeeds: [nanoid(), nanoid(), nanoid(), nanoid()],
   };
+}
+
+export function generateNext(dungeon, direction) {
+  const args = {
+    ...dungeon.args,
+    seed: dungeon.nearSeeds[direction],
+  };
+  const newDungeon = generate(args);
+
+  // Update parent seed
+  switch (direction) {
+    case Direction.up:
+      newDungeon.nearSeeds[Direction.down] = dungeon.seed;
+      break;
+    case Direction.right:
+      newDungeon.nearSeeds[Direction.left] = dungeon.seed;
+      break;
+    case Direction.down:
+      newDungeon.nearSeeds[Direction.up] = dungeon.seed;
+      break;
+    case Direction.left:
+      newDungeon.nearSeeds[Direction.right] = dungeon.seed;
+      break;
+    default:
+      break;
+  }
+
+  return newDungeon;
 }
 
 //

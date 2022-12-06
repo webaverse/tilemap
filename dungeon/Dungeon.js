@@ -1,11 +1,11 @@
 import metaversefile from 'metaversefile';
 import * as THREE from 'three';
-import {nanoid} from 'nanoid';
 import AssetManager from './AssetManager.js';
 import {SNAP_SIZE, TILE_SIZE} from './Constants.js';
 import {
   Direction,
   generate,
+  generateNext,
   TileLayer,
   TileType,
 } from './libs/generate/index.js';
@@ -77,9 +77,12 @@ export default class Dungeon {
       node.updateMatrixWorld();
     });
     this.oldGroup.children = [];
+    this.oldGroup.updateMatrixWorld();
 
     // Move group into old group
     this.oldGroup.copy(this.group, true);
+    this.group.updateMatrixWorld();
+    this.oldGroup.updateMatrixWorld();
 
     // Clear group
     this.group.children.forEach(node => {
@@ -89,6 +92,7 @@ export default class Dungeon {
       node.updateMatrixWorld();
     });
     this.group.children = [];
+    this.group.updateMatrixWorld();
 
     // Draw
     this.drawTiles(dungeon.layers.tiles, Textures.tilesTextures(this.assets));
@@ -191,23 +195,7 @@ export default class Dungeon {
     let detectedDoor = this.getDoorPlayerArrived(this.dungeon, this.group);
     if (detectedDoor.arrived) {
       // Generate new dungeon
-      const newDungeon = generate({
-        mapWidth: 40,
-        mapHeight: 20,
-        mapGutterWidth: 2,
-        iterations: 15,
-        containerMinimumSize: 4,
-        containerMinimumRatio: 0.45,
-        containerSplitRetries: 30,
-        corridorWidth: 4,
-        tileWidth: 32,
-        seed: nanoid(),
-        debug: false,
-        rooms: Data.loadRooms(),
-      });
-
-      console.log('>>>>>>>');
-      console.log(newDungeon);
+      const newDungeon = generateNext(this.dungeon, detectedDoor.direction);
 
       // Draw next dungeon
       this.drawDungeon(newDungeon);
@@ -236,6 +224,10 @@ export default class Dungeon {
           this.group.copy(this.oldGroup, true);
           this.oldGroup.copy(this.tempGroup, true);
 
+          this.tempGroup.updateMatrixWorld();
+          this.group.updateMatrixWorld();
+          this.oldGroup.updateMatrixWorld();
+
           // Clear temp group
           this.tempGroup.children.forEach(node => {
             node?.geometry?.dispose();
@@ -244,25 +236,10 @@ export default class Dungeon {
             node.updateMatrixWorld();
           });
           this.tempGroup.children = [];
+          this.tempGroup.updateMatrixWorld();
 
           // Generate new dungeon
-          const newDungeon = generate({
-            mapWidth: 40,
-            mapHeight: 20,
-            mapGutterWidth: 2,
-            iterations: 15,
-            containerMinimumSize: 4,
-            containerMinimumRatio: 0.45,
-            containerSplitRetries: 30,
-            corridorWidth: 4,
-            tileWidth: 32,
-            seed: nanoid(),
-            debug: false,
-            rooms: Data.loadRooms(),
-          });
-
-          console.log('<<<<<<<');
-          console.log(newDungeon);
+          const newDungeon = generateNext(this.dungeon, detectedDoor.direction);
 
           // Draw next dungeon
           this.drawDungeon(newDungeon);
@@ -509,6 +486,7 @@ export default class Dungeon {
             break;
           }
         }
+        this.group.updateMatrixWorld();
 
         // Add new node
         const geometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE, 1, 1);
@@ -527,6 +505,7 @@ export default class Dungeon {
         sprite.position.set(x * TILE_SIZE, 0, y * TILE_SIZE);
         this.group.add(sprite);
         sprite.updateMatrixWorld();
+        this.group.updateMatrixWorld();
       } else {
         const x = nodeX - oldDungeonRect.min_x;
         const y = nodeY - oldDungeonRect.min_y;
@@ -549,6 +528,7 @@ export default class Dungeon {
             break;
           }
         }
+        this.oldGroup.updateMatrixWorld();
 
         // Add new node
         const geometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE, 1, 1);
@@ -567,6 +547,7 @@ export default class Dungeon {
         sprite.position.set(x * TILE_SIZE, 0, y * TILE_SIZE);
         this.oldGroup.add(sprite);
         sprite.updateMatrixWorld();
+        this.oldGroup.updateMatrixWorld();
       }
     }
   }
